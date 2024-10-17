@@ -1,0 +1,78 @@
+name: build
+
+on:
+  push:
+    branches: ["dev"]
+
+jobs:
+  build-x86_64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: setup env
+        run: sudo apt-get install -y libcap-dev libssl-dev libminiupnpc-dev
+
+      - name: make
+        run: |
+          ./autogen.sh
+          ./configure --with-openssl --enable-miniupnp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
+          make
+
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: n2n_x86_64
+          path: |
+            edge
+            supernode
+            tools/n2n-benchmark
+            tools/n2n-portfwd
+          if-no-files-found: error
+
+  build-arm64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: setup env
+        run: |
+          sudo sed -i 's/^deb/deb [arch=amd64]/g' /etc/apt/sources.list
+          echo '
+          deb [arch=arm64] http://ports.ubuntu.com/ '$(lsb_release -cs)' main multiverse universe
+          deb [arch=arm64] http://ports.ubuntu.com/ '$(lsb_release -cs)'-security main multiverse universe
+          deb [arch=arm64] http://ports.ubuntu.com/ '$(lsb_release -cs)'-backports main multiverse universe
+          deb [arch=arm64] http://ports.ubuntu.com/ '$(lsb_release -cs)'-updates main multiverse universe
+          ' | sudo tee -a /etc/apt/sources.list
+          sudo dpkg --add-architecture arm64
+          sudo apt update
+          sudo apt-get install -y libcap-dev:arm64 libssl-dev:arm64 libminiupnpc-dev:arm64
+
+      - name: make
+        run: |
+          HOST_TRIPLET=aarch64-linux-gnu
+          sudo apt-get install binutils-$HOST_TRIPLET gcc-$HOST_TRIPLET
+          ./autogen.sh
+          ./configure --host $HOST_TRIPLET --with-openssl --enable-miniupnp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
+          make
+
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: n2n_arm64
+          path: |
+            edge
+            supernode
+            tools/n2n-benchmark
+            tools/n2n-portfwd
+          if-no-files-found: error
