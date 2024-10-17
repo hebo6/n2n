@@ -62,3 +62,10 @@ coverage/
 /AUTHORS
 /ChangeLog
 /NEWS
+
+# bear
+compile_commands.json
+
+# clangd
+.cache
+
