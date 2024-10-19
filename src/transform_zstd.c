@@ -17,10 +17,10 @@
  */
 
 
-#include "config.h"  // for HAVE_ZSTD
+#include "config.h"  // for HAVE_LIBZSTD
 
 
-#ifdef HAVE_ZSTD
+#ifdef HAVE_LIBZSTD
 
 
 #include "n2n.h"
@@ -148,4 +148,4 @@ int n2n_transop_zstd_init (const n2n_edge_conf_t *conf, n2n_trans_op_t *ttt) {
 }
 
 
-#endif // HAVE_ZSTD
+#endif // HAVE_LIBZSTD

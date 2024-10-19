@@ -210,9 +210,9 @@ static void help (int level) {
                "[-e <preferred local IP address>] [-S<level of solitude>]"
             "\n                      "
                "[--select-rtt] "
-#if defined(HAVE_MINIUPNP) || defined(HAVE_NATPMP)
+#if defined(HAVE_LIBMINIUPNPC) || defined(HAVE_LIBNATPMP)
                "[--no-port-forwarding] "
-#endif // HAVE_MINIUPNP || HAVE_NATPMP
+#endif // HAVE_LIBMINIUPNPC || HAVE_LIBNATPMP
           "\n\n tap device and       "
                "[-a [static:|dhcp:]<tap IP address>[/<cidr suffix>]] "
             "\n overlay network      "
@@ -320,7 +320,7 @@ static void help (int level) {
         printf(" -H                | use header encryption, supernode needs fixed community\n");
         printf(" -z1 ... -z2       | compress outgoing data packets, -z1 = lzo1x,\n"
                "                   | "
-#ifdef HAVE_ZSTD
+#ifdef HAVE_LIBZSTD
                                      "-z2 = zstd, "
 #endif
                                      "disabled by default\n");
@@ -405,7 +405,7 @@ static void setPayloadCompression (n2n_edge_conf_t *conf, int compression) {
             conf->compression = N2N_COMPRESSION_ID_LZO;
             break;
         }
-#ifdef HAVE_ZSTD
+#ifdef HAVE_LIBZSTD
         case 2: {
             conf->compression = N2N_COMPRESSION_ID_ZSTD;
             break;
