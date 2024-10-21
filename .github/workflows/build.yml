@@ -16,12 +16,12 @@ jobs:
           fetch-depth: 0
 
       - name: setup env
-        run: sudo apt-get install -y libcap-dev libssl-dev libminiupnpc-dev libzstd-dev
+        run: sudo apt-get install -y libcap-dev libssl-dev libminiupnpc-dev libnatpmp-dev libzstd-dev
 
       - name: make
         run: |
           ./autogen.sh
-          ./configure --with-zstd --with-openssl --enable-miniupnp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
+          ./configure --with-zstd --with-openssl --enable-miniupnp --enable-natpmp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
           make
 
       - name: upload
@@ -56,14 +56,14 @@ jobs:
           ' | sudo tee -a /etc/apt/sources.list
           sudo dpkg --add-architecture arm64
           sudo apt update
-          sudo apt-get install -y libcap-dev:arm64 libssl-dev:arm64 libminiupnpc-dev:arm64 libzstd-dev:arm64
+          sudo apt-get install -y libcap-dev:arm64 libssl-dev:arm64 libminiupnpc-dev:arm64 libnatpmp-dev:arm64 libzstd-dev:arm64
 
       - name: make
         run: |
           HOST_TRIPLET=aarch64-linux-gnu
           sudo apt-get install binutils-$HOST_TRIPLET gcc-$HOST_TRIPLET
           ./autogen.sh
-          ./configure --with-zstd --host $HOST_TRIPLET --with-openssl --enable-miniupnp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
+          ./configure --with-zstd --host $HOST_TRIPLET --with-openssl --enable-miniupnp --enable-natpmp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
           make
 
       - name: upload
