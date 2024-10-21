@@ -179,37 +179,6 @@ int get_port_from_json (uint16_t *port, json_object_t *json, char *key, int tag,
     return flags;
 }
 
-
-// -------------------------------------------------------------------------------------------------------
-// PLATFORM-DEPENDANT CODE
-
-
-#ifndef _WIN32
-// taken from https://web.archive.org/web/20170407122137/http://cc.byexamples.com/2007/04/08/non-blocking-user-input-in-loop-without-ncurses/
-int _kbhit () {
-
-    struct timeval tv;
-    fd_set fds;
-
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-    FD_ZERO(&fds);
-    FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
-    select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
-
-    return FD_ISSET(STDIN_FILENO, &fds);
-}
-#else
-// A dummy definition to avoid compile errors on windows
-int _kbhit () {
-    return 0;
-}
-#endif
-
-
-// -------------------------------------------------------------------------------------------------------
-
-
 static void help (int level) {
 
     if(level == 0) return; /* no help required */
@@ -310,7 +279,8 @@ int main (int argc, char* argv[]) {
     n2n_srand(n2n_seed());
 
     // get command line options and eventually overwrite initialized conf
-    while((c = getopt_long(argc, argv, "t:vV", NULL, NULL)) != '?') {
+    while(true) {
+        c = getopt_long(argc, argv, "t:vV", NULL, NULL);
         if(c == 255) break;
         help(set_option(&ppp, c, optarg));
     }
@@ -329,13 +299,8 @@ int main (int argc, char* argv[]) {
         goto end_route_tool;
     }
 
-    // output status
-    traceEvent(TRACE_NORMAL, "press ENTER to end the program");
-
 reset_main_loop:
 
-    wait_time.tv_sec = SOCKET_TIMEOUT;
-    wait_time.tv_usec = 0;
     port = 0;
     current_port = 0;
     tag_info = 0;
@@ -344,7 +309,7 @@ reset_main_loop:
     // read answer packet by packet which are only accepted if a corresponding request was sent before
     // of which we know about by having set the related tag, tag_info
     // a valid sock address indicates that we have seen a valid answer to the info request
-    while(keep_running && !_kbhit()) {
+    while(keep_running) {
         // current time
         now = time(NULL);
 
@@ -362,6 +327,8 @@ reset_main_loop:
         // wait for any answer to info or read request
         FD_ZERO(&socket_mask);
         FD_SET(sock, &socket_mask);
+        wait_time.tv_sec = SOCKET_TIMEOUT;
+        wait_time.tv_usec = 0;
         ret = select(sock + 1, &socket_mask, NULL, NULL, &wait_time);
 
         // refresh current time after having waited
