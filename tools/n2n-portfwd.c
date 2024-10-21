@@ -279,7 +279,8 @@ int main (int argc, char* argv[]) {
     n2n_srand(n2n_seed());
 
     // get command line options and eventually overwrite initialized conf
-    while((c = getopt_long(argc, argv, "t:vV", NULL, NULL)) != '?') {
+    while(true) {
+        c = getopt_long(argc, argv, "t:vV", NULL, NULL);
         if(c == 255) break;
         help(set_option(&ppp, c, optarg));
     }
@@ -300,8 +301,6 @@ int main (int argc, char* argv[]) {
 
 reset_main_loop:
 
-    wait_time.tv_sec = SOCKET_TIMEOUT;
-    wait_time.tv_usec = 0;
     port = 0;
     current_port = 0;
     tag_info = 0;
@@ -328,6 +327,8 @@ reset_main_loop:
         // wait for any answer to info or read request
         FD_ZERO(&socket_mask);
         FD_SET(sock, &socket_mask);
+        wait_time.tv_sec = SOCKET_TIMEOUT;
+        wait_time.tv_usec = 0;
         ret = select(sock + 1, &socket_mask, NULL, NULL, &wait_time);
 
         // refresh current time after having waited
