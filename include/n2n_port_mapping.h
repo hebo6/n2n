@@ -20,7 +20,7 @@
 #ifndef _N2N_PORT_MAPPING_H_
 #define _N2N_PORT_MAPPING_H_
 
-
+#include "n2n.h"
 #include <stdint.h>
 
 #ifdef HAVE_LIBMINIUPNPC
