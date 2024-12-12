@@ -84,11 +84,7 @@ jobs:
           if-no-files-found: error
 
   build-windows_x64:
-    runs-on: windows-latest
-
-    defaults:
-      run:
-        shell: bash
+    runs-on: ubuntu-latest
 
     steps:
       - name: checkout
@@ -97,9 +93,21 @@ jobs:
           submodules: "recursive"
           fetch-depth: 0
 
+      - name: setup env libssl
+        run: |
+          curl https://download.firedaemon.com/FireDaemon-OpenSSL/openssl-3.4.0.zip -o openssl.zip
+          unzip openssl.zip -d openssl
+          sudo mkdir /usr/x86_64-w64-mingw32
+          sudo mv openssl/x64/* /usr/x86_64-w64-mingw32/
+
       - name: make
         run: |
-          ./scripts/hack_fakeautoconf.sh
+          HOST_TRIPLET=mingw-w64-x86-64
+          sudo apt-get install -y binutils-$HOST_TRIPLET gcc-$HOST_TRIPLET
+          ./autogen.sh
+          #./configure --host x86_64-w64-mingw32 --with-zstd --with-openssl --enable-miniupnp --enable-natpmp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
+          # fixme adding "--with-openssl" will cause segmentation fault when run "edge.exe -k xxx"
+          ./configure --host x86_64-w64-mingw32 CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
           make
 
       - name: collect files
