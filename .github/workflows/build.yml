@@ -3,6 +3,8 @@ name: build
 on:
   push:
     branches: [ "dev" ]
+    tags:
+      - 'v*'
 
 jobs:
   build-linux_x64:
@@ -205,3 +207,26 @@ jobs:
             libcrypto-3-x64.dll
             libssl-3-x64.dll
           if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    needs:
+      - build-linux_aarch64
+      - build-linux_aarch64_debug
+      - build-linux_x64
+      - build-linux_x64_debug
+      - build-windows_x64
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+      - name: zip
+        run: |
+          for i in */; do
+          zip -r "${i%/}.zip" "$i"
+          done
+      - name: release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: '*.zip'
+          fail_on_unmatched_files: true
