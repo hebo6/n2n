@@ -22,50 +22,18 @@ jobs:
 
       - name: make
         run: |
-          ./autogen.sh
-          ./configure --with-zstd --with-openssl --enable-miniupnp --enable-natpmp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
-          make
+          mkdir build
+          cd build
+          cmake .. -DN2N_OPTION_MINIUPNP=ON -DN2N_OPTION_NATPMP=ON -DN2N_OPTION_CAP=ON -DCMAKE_C_FLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
+          cmake --build .
 
       - name: collect files
         run: |
-          mv tools/n2n-benchmark tools/n2n-portfwd ./
+          mv build/edge build/supernode build/n2n-benchmark build/n2n-portfwd ./
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: n2n_linux_x64
-          path: |
-            edge
-            supernode
-            n2n-benchmark
-            n2n-portfwd
-          if-no-files-found: error
-
-  build-linux_x64_debug:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
-          fetch-depth: 0
-
-      - name: setup env
-        run: sudo apt-get install -y libcap-dev libssl-dev libminiupnpc-dev libnatpmp-dev libzstd-dev
-
-      - name: make
-        run: |
-          ./autogen.sh
-          ./configure --with-zstd --with-openssl --enable-miniupnp --enable-natpmp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY -O0 -g3"
-          make
-
-      - name: collect files
-        run: |
-          mv tools/n2n-benchmark tools/n2n-portfwd ./
-      - name: upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: n2n_linux_x64_debug
           path: |
             edge
             supernode
@@ -102,64 +70,19 @@ jobs:
         run: |
           HOST_TRIPLET=aarch64-linux-gnu
           sudo apt-get install -y binutils-$HOST_TRIPLET gcc-$HOST_TRIPLET
-          ./autogen.sh
-          ./configure --host $HOST_TRIPLET --with-zstd --with-openssl --enable-miniupnp --enable-natpmp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
-          make
+          export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_C_COMPILER=$HOST_TRIPLET-gcc -DN2N_OPTION_MINIUPNP=ON -DN2N_OPTION_NATPMP=ON -DN2N_OPTION_CAP=ON -DCMAKE_C_FLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
+          cmake --build .
 
       - name: collect files
         run: |
-          mv tools/n2n-benchmark tools/n2n-portfwd ./
+          mv build/edge build/supernode build/n2n-benchmark build/n2n-portfwd ./
       - name: upload
         uses: actions/upload-artifact@v4
         with:
           name: n2n_linux_aarch64
-          path: |
-            edge
-            supernode
-            n2n-benchmark
-            n2n-portfwd
-          if-no-files-found: error
-
-  build-linux_aarch64_debug:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
-          fetch-depth: 0
-
-      - name: setup env
-        run: |
-          sudo sed -i 's/^Types: deb$/Types: deb\nArchitectures: amd64/' /etc/apt/sources.list.d/ubuntu.sources
-          echo '
-          Types: deb
-          URIs: http://ports.ubuntu.com/
-          Suites: '$(lsb_release -cs)' '$(lsb_release -cs)'-updates '$(lsb_release -cs)'-backports '$(lsb_release -cs)'-security
-          Components: main restricted universe multiverse
-          Architectures: arm64
-          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
-          ' | sudo tee /etc/apt/sources.list.d/arm64.sources
-          sudo dpkg --add-architecture arm64
-          sudo apt update
-          sudo apt-get install -y libcap-dev:arm64 libssl-dev:arm64 libminiupnpc-dev:arm64 libnatpmp-dev:arm64 libzstd-dev:arm64
-
-      - name: make
-        run: |
-          HOST_TRIPLET=aarch64-linux-gnu
-          sudo apt-get install -y binutils-$HOST_TRIPLET gcc-$HOST_TRIPLET
-          ./autogen.sh
-          ./configure --host $HOST_TRIPLET --with-zstd --with-openssl --enable-miniupnp --enable-natpmp --enable-cap --enable-pthread CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY -O0 -g3"
-          make
-
-      - name: collect files
-        run: |
-          mv tools/n2n-benchmark tools/n2n-portfwd ./
-      - name: upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: n2n_linux_aarch64_debug
           path: |
             edge
             supernode
@@ -179,25 +102,35 @@ jobs:
 
       - name: setup env libssl
         run: |
-          curl -L https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-openssl-3.6.0-1-any.pkg.tar.zst -o openssl.pkg.tar.zst
+          curl -L https://mirror.msys2.org/mingw/ucrt64/mingw-w64-ucrt-x86_64-openssl-3.6.0-1-any.pkg.tar.zst -o openssl.pkg.tar.zst
           tar --use-compress-program=unzstd -xf openssl.pkg.tar.zst
 
           sudo mkdir /usr/x86_64-w64-mingw32
-          sudo mv mingw64/* /usr/x86_64-w64-mingw32/
+          sudo mv ucrt64/* /usr/x86_64-w64-mingw32/
 
       - name: make
         run: |
           HOST_TRIPLET=mingw-w64-x86-64
           sudo apt-get install -y binutils-$HOST_TRIPLET gcc-$HOST_TRIPLET
-          ./autogen.sh
-          ./configure --host x86_64-w64-mingw32 --with-openssl CFLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY"
-          make
+          mkdir build
+          cd build
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=x64-mingw-static \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+            -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+            -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
+            -DN2N_OPTION_ZSTD=OFF \
+            -DN2N_OPTION_PTHREAD=OFF \
+            -DCMAKE_C_FLAGS="-DSKIP_MULTICAST_PEERS_DISCOVERY -static"
+          cmake --build .
 
       - name: collect files
         run: |
           cp /usr/x86_64-w64-mingw32/bin/libcrypto-3-x64.dll ./
           cp /usr/x86_64-w64-mingw32/bin/libssl-3-x64.dll ./
-          mv tools/n2n-benchmark.exe tools/n2n-portfwd.exe ./
+          mv build/edge.exe build/supernode.exe build/n2n-benchmark.exe build/n2n-portfwd.exe ./
       - name: upload
         uses: actions/upload-artifact@v4
         with:
@@ -216,9 +149,7 @@ jobs:
     if: github.ref_type == 'tag'
     needs:
       - build-linux_aarch64
-      - build-linux_aarch64_debug
       - build-linux_x64
-      - build-linux_x64_debug
       - build-windows_x64
     steps:
       - name: Download packages

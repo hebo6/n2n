@@ -1,0 +1,28 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#cmakedefine PACKAGE_BUILDDATE "@PACKAGE_BUILDDATE@"
+#cmakedefine PACKAGE_NAME "@PACKAGE_NAME@"
+#cmakedefine PACKAGE_VERSION "@PACKAGE_VERSION@"
+#cmakedefine PACKAGE_STRING "@PACKAGE_STRING@"
+#cmakedefine PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+#cmakedefine PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+#cmakedefine PACKAGE_URL "@PACKAGE_URL@"
+
+#cmakedefine HAVE_LIBZSTD 1
+#cmakedefine HAVE_LIBCRYPTO 1
+#cmakedefine HAVE_LIBMINIUPNPC 1
+#cmakedefine HAVE_LIBNATPMP 1
+#cmakedefine HAVE_LIBPCAP 1
+#cmakedefine HAVE_LIBCAP 1
+#cmakedefine HAVE_LIBPTHREAD 1
+
+/* OS specific defines */
+#cmakedefine HAVE_NETINET_IN_H 1
+#cmakedefine HAVE_ARPA_INET_H 1
+#cmakedefine HAVE_NETDB_H 1
+#cmakedefine HAVE_SYS_SOCKET_H 1
+#cmakedefine HAVE_SYS_TYPES_H 1
+#cmakedefine HAVE_UNISTD_H 1
+
+#endif /* CONFIG_H */
