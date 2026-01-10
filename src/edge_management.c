@@ -463,7 +463,7 @@ void readFromMgmtSocket (n2n_edge_t *eee) {
     req.mgmt_password_hash = eee->conf.mgmt_password_hash;
     req.sock_len = sizeof(req.sas);
 
-    now = time(NULL);
+    now = n2n_time();
     recvlen = recvfrom(eee->udp_mgmt_sock, udp_buf, N2N_PKT_BUF_SIZE, 0 /*flags*/,
                        &req.sender_sock, &req.sock_len);
 
@@ -629,7 +629,7 @@ void readFromMgmtSocket (n2n_edge_t *eee) {
 
     msg_len += snprintf((char *) (udp_buf + msg_len), (N2N_PKT_BUF_SIZE - msg_len),
                         "uptime %lu | ",
-                        time(NULL) - eee->start_time);
+                        now - eee->start_time);
 
     msg_len += snprintf((char *) (udp_buf + msg_len), (N2N_PKT_BUF_SIZE - msg_len),
                         "pend_peers %u | ",

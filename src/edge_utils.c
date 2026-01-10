@@ -402,7 +402,7 @@ n2n_edge_t* edge_init (const n2n_edge_conf_t *conf, int *rv) {
 
     memcpy(&eee->conf, conf, sizeof(*conf));
     eee->curr_sn = eee->conf.supernodes;
-    eee->start_time = time(NULL);
+    eee->start_time = n2n_time();
 
     eee->known_peers        = NULL;
     eee->pending_peers    = NULL;
@@ -737,7 +737,7 @@ static void register_with_new_peer (n2n_edge_t *eee,
     } else{
         scan->sock = *peer;
     }
-    scan->last_seen = time(NULL);
+    scan->last_seen = n2n_time();
     if(dev_addr != NULL) {
         memcpy(&(scan->dev_addr), dev_addr, sizeof(n2n_ip_subnet_t));
     }
@@ -780,7 +780,7 @@ static void check_peer_registration_needed (n2n_edge_t *eee,
         register_with_new_peer(eee, from_supernode, via_multicast, mac, dev_addr, dev_desc, peer);
     } else {
         /* Already in known_peers. */
-        time_t now = time(NULL);
+        time_t now = n2n_time();
 
         if(!from_supernode)
             scan->last_p2p = now;
@@ -1708,7 +1708,7 @@ static int handle_PACKET (n2n_edge_t * eee,
     macstr_t                  mac_buf;
     n2n_sock_str_t            sockbuf;
 
-    now = time(NULL);
+    now = n2n_time();
 
     traceEvent(TRACE_DEBUG, "handle_PACKET size %u transform %u",
                (unsigned int)psize, (unsigned int)pkt->transform);
@@ -1943,7 +1943,7 @@ static int find_peer_destination (n2n_edge_t * eee,
     macstr_t mac_buf;
     n2n_sock_str_t sockbuf;
     int retval = 0;
-    time_t now = time(NULL);
+    time_t now = n2n_time();
 
     if(is_multi_broadcast(mac_address)) {
         traceEvent(TRACE_DEBUG, "multicast or broadcast destination peer, using supernode");
@@ -2909,7 +2909,7 @@ int run_edge_loop (n2n_edge_t *eee) {
 #endif
 
     *eee->keep_running = true;
-    update_supernode_reg(eee, time(NULL));
+    update_supernode_reg(eee, n2n_time());
 
     /* Main loop
      *
@@ -2950,7 +2950,7 @@ int run_edge_loop (n2n_edge_t *eee) {
         wait_time.tv_sec = (eee->sn_wait) ? (SOCKET_TIMEOUT_INTERVAL_SECS / 10 + 1) : (SOCKET_TIMEOUT_INTERVAL_SECS);
         wait_time.tv_usec = 0;
         rc = select(max_sock + 1, &socket_mask, NULL, NULL, &wait_time);
-        now = time(NULL);
+        now = n2n_time();
 
         // make sure ciphers are updated before the packet is treated
         if((now - lastTransop) > TRANSOP_TICK_INTERVAL) {

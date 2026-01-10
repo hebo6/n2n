@@ -350,7 +350,7 @@ N2N_THREAD_RETURN_DATATYPE resolve_thread(N2N_THREAD_PARAMETER_DATATYPE p) {
         sleep(N2N_RESOLVE_INTERVAL / 60); /* wake up in-between to check for signaled requests */
 
         // what's the time?
-        now = time(NULL);
+        now = n2n_time();
 
         // lock access
         pthread_mutex_lock(&param->access);
@@ -629,7 +629,7 @@ size_t purge_expired_nodes (struct peer_info **peer_list,
                             time_t *p_last_purge,
                             int frequency, int timeout) {
 
-    time_t now = time(NULL);
+    time_t now = n2n_time();
     size_t num_reg = 0;
 
     if((now - (*p_last_purge)) < frequency) {
@@ -987,4 +987,38 @@ int time_stamp_verify_and_update (uint64_t stamp, uint64_t *previous_stamp, int 
     }
 
     return 1; // success
+}
+
+
+/* *********************************************** */
+
+
+/**
+ * @brief Get monotonic time in seconds.
+ *
+ * This function returns the number of seconds since some unspecified starting point.
+ * It is guaranteed to be monotonic, meaning it will never go backwards even if the
+ * system time is adjusted.
+ */
+time_t n2n_time (void) {
+
+#ifdef _WIN32
+    return (time_t)(GetTickCount64() / 1000);
+#else
+    struct timespec ts;
+
+#ifdef __APPLE__
+    // macOS 10.12+ supports clock_gettime(CLOCK_MONOTONIC, ...)
+    if(clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
+        return ts.tv_sec;
+    }
+    return time(NULL); // fallback (should not happen on modern macOS)
+#else
+    if(clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
+        return ts.tv_sec;
+    }
+    return time(NULL); // fallback
+#endif /* __APPLE__ */
+
+#endif /* _WIN32 */
 }

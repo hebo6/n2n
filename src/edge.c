@@ -1164,7 +1164,7 @@ int main (int argc, char* argv[]) {
     supernode_connect(eee);
     while(runlevel < 5) {
 
-        now = time(NULL);
+        now = n2n_time();
 
         // we do not use switch-case because we also check for 'greater than'
 

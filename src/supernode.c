@@ -535,7 +535,7 @@ static void dump_registrations (int signo) {
     struct sn_community *comm, *ctmp;
     struct peer_info *list, *tmp;
     char buf[32];
-    time_t now = time(NULL);
+    time_t now = n2n_time();
     u_int num = 0;
 
     traceEvent(TRACE_NORMAL, "====================================");

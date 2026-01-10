@@ -330,7 +330,7 @@ int load_allowed_sn_community (n2n_sn_t *sss) {
 
     // new key_time for all communities, requires dynamic keys to be recalculated (see further below),
     // and  edges to re-register (see above) and ...
-    sss->dynamic_key_time = time(NULL);
+    sss->dynamic_key_time = n2n_time();
     // ... federated supernodes to re-register
     re_register_and_purge_supernodes(sss, sss->federation, &any_time, any_time, 1 /* forced */);
 
@@ -2587,7 +2587,7 @@ int run_sn_loop (n2n_sn_t *sss) {
     time_t last_sort_communities = 0;
     time_t last_re_reg_and_purge = 0;
 
-    sss->start_time = time(NULL);
+    sss->start_time = n2n_time();
 
     while(*sss->keep_running) {
         int rc;
@@ -2626,11 +2626,11 @@ int run_sn_loop (n2n_sn_t *sss) {
         wait_time.tv_sec = 10;
         wait_time.tv_usec = 0;
 
-        before = time(NULL);
+        before = n2n_time();
 
         rc = select(max_sock + 1, &socket_mask, NULL, NULL, &wait_time);
 
-        now = time(NULL);
+        now = n2n_time();
 
         if(rc > 0) {
 
