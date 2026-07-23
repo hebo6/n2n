@@ -467,7 +467,6 @@ struct peer_info {
     uint8_t                          local;
     time_t                           uptime;
     n2n_version_t                    version;
-    int                              consecutive_errors;
 
     UT_hash_handle     hh; /* makes this structure hashable */
 };

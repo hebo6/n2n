@@ -1585,22 +1585,11 @@ void update_supernode_reg (n2n_edge_t * eee, time_t now) {
     int cnt = 0;
     int off = 0;
 
-    int interval = eee->conf.register_interval;
-    int fast_retry_allowed = 1;
-
-    if(eee->curr_sn->consecutive_errors >= 10) {
-        if (eee->curr_sn->consecutive_errors == 9) {
-            traceEvent(TRACE_NORMAL, "Last connection attempt within 300 seconds");
-        }
-        interval = 300; /* 5 minutes */
-        fast_retry_allowed = 0;
-    }
-
-    if((eee->sn_wait && fast_retry_allowed && (now > (eee->last_register_req + (interval / 10))))
+    if((eee->sn_wait && (now > (eee->last_register_req + (eee->conf.register_interval / 10))))
      ||(eee->sn_wait == 2)) /* immediately re-register in case of RE_REGISTER_SUPER */ {
         /* fall through */
         traceEvent(TRACE_DEBUG, "update_supernode_reg: doing fast retry.");
-    } else if(now < (eee->last_register_req + interval))
+    } else if(now < (eee->last_register_req + eee->conf.register_interval))
         return; /* Too early */
 
     // determine time offset to apply on last_register_req for
@@ -1608,7 +1597,7 @@ void update_supernode_reg (n2n_edge_t * eee, time_t now) {
     if(eee->sn_wait == 2) {
         // remaining 1/4 is greater than 1/10 fast retry allowance;
         // '%' might be expensive but does not happen all too often
-        off = n2n_rand() % ((interval * 3) / 4);
+        off = n2n_rand() % ((eee->conf.register_interval * 3) / 4);
     }
 
     check_join_multicast_group(eee);
@@ -1619,8 +1608,6 @@ void update_supernode_reg (n2n_edge_t * eee, time_t now) {
         sn_selection_sort(&(eee->conf.supernodes));
         eee->curr_sn = eee->conf.supernodes;
         traceEvent(TRACE_WARNING, "supernode not responding, now trying [%s]", supernode_ip(eee));
-        eee->curr_sn->consecutive_errors++;
-        eee->sn_wait = 0; /* ensure we wait for the full interval next time */
         reset_sup_attempts(eee);
         // trigger out-of-schedule DNS resolution
         eee->resolution_request = 1;
@@ -2599,7 +2586,6 @@ void process_udp (n2n_edge_t *eee, const struct sockaddr *sender_sock, const SOC
                 }
 
                 eee->sn_wait = 0;
-                eee->curr_sn->consecutive_errors = 0;
                 reset_sup_attempts(eee); /* refresh because we got a response */
 
                 // update last_sup only on 'real' REGISTER_SUPER_ACKs, not on bootstrap ones (own MAC address
@@ -2650,7 +2636,7 @@ void process_udp (n2n_edge_t *eee, const struct sockaddr *sender_sock, const SOC
                 // REVISIT: authenticate the NAK packet really originating from the supernode along the auth token.
                 //          this must follow a different scheme because it needs to prove authenticity although the
                 //          edge-provided credentials are wrong
-                eee->curr_sn->consecutive_errors = 0;
+
                 traceEvent(TRACE_INFO, "Rx REGISTER_SUPER_NAK");
 
                 if((memcmp(nak.srcMac, eee->device.mac_addr, sizeof(n2n_mac_t))) == 0) {
